@@ -14,7 +14,7 @@ PlasmoidItem {
     property string currentQuoteAfterTimeString: ""
     property string currentAuthor: ""
     property string timeString: ""
-    property real textOpacity: 1.0  // Added this property to control opacity
+    property real textOpacity: 1.0
     
     fullRepresentation: Item {
         width: plasmoid.formFactor === PlasmaCore.Types.Vertical ? parent.width : 450
@@ -58,16 +58,18 @@ PlasmoidItem {
         var minutes = now.getMinutes().toString().padStart(2, '0');
         var time = hours + ":" + minutes;
         
-        root.textOpacity = 0 
+        root.textOpacity = 0;
         
         Quotes.readQuotes(time, function(quoteData) {
-            if (quoteData.length >= 5) {
-                root.timeString = quoteData[1];
-                var quoteSplitTimeString = quoteData[2].split(root.timeString);
-                root.currentAuthor = quoteData[4];
-                root.currentQuoteBeforeTimeString = quoteSplitTimeString[0].trim();
-                root.currentQuoteAfterTimeString = quoteSplitTimeString[1].trim();
-                root.currentAuthor = "- " + root.currentAuthor;
+            if (quoteData && quoteData.quote) {
+                
+                root.timeString = quoteData.timestring || time;
+                var timeToSplit = quoteData.quote.includes(root.timeString) ? root.timeString : time;
+                var quoteParts = quoteData.quote.split(timeToSplit);
+                
+                root.currentQuoteBeforeTimeString = quoteParts[0] ? quoteParts[0].trim() : "";
+                root.currentQuoteAfterTimeString = quoteParts[1] ? quoteParts[1].trim() : "";
+                root.currentAuthor = quoteData.author ? "- " + quoteData.author : "";
             } else {
                 console.log("No quote found for the specified time.");
                 root.currentQuoteBeforeTimeString = time;
@@ -75,7 +77,7 @@ PlasmoidItem {
                 root.currentAuthor = "";
                 root.timeString = time;
             }
-            root.textOpacity = 1
+            root.textOpacity = 1;
         });
     }
 
@@ -87,7 +89,7 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
-        root.textOpacity = 0
-        root.getTimeAndQuote()
+        root.textOpacity = 0;
+        root.getTimeAndQuote();
     }
 }
